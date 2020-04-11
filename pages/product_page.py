@@ -12,7 +12,7 @@ class ProductPage(BasePage):
         add_button = self.browser.find_element(*ProductPageLocators.ADD_TO_BASKET)
         add_button.click()
 
-    def sould_be_add_product_button(self):
+    def should_be_add_product_button(self):
         assert self.is_element_present(*ProductPageLocators.ADD_TO_BASKET), "Add button is not presented"
 
     def solve_quiz_and_get_code(self):
@@ -29,7 +29,6 @@ class ProductPage(BasePage):
         except NoAlertPresentException:
             print("No second alert presented")
 
-        time.sleep(5)
 
     def get_book_name(self):
         book_name = self.browser.find_element(*ProductPageLocators.BOOK_NAME).text
@@ -43,8 +42,6 @@ class ProductPage(BasePage):
         self.book_name = book_name
         book_name_in_basket = self.browser.find_element(*ProductPageLocators.BOOK_NAME_IN_BASKET).get_attribute('textContent')
         assert book_name == book_name_in_basket, "Book name in basket is not correct!"
-        # print(f"book name: {book_name}")
-        # print(f"book name in basket: {book_name_in_basket}")
 
     def compare_price_in_basket_and_in_cataloge(self, book_price):
         self.book_price = book_price
@@ -54,7 +51,6 @@ class ProductPage(BasePage):
         assert book_price_in_msg.find(book_price) != -1, "No book price in message!"
 
     def should_not_be_success_message(self):
-        # print(f"success_msg: {success_msg}")
         assert self.is_element_present(*ProductPageLocators.SUCCESS_MESSAGE) == False, \
             "Success message is presented, but should not be"
 
