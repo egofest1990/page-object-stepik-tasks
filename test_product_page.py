@@ -1,79 +1,107 @@
 from .pages.product_page import ProductPage
+from .pages.login_page import LoginPage
 from .pages.basket_page import BasketPage
-from .pages.locators import ProductPageLocators
 import pytest
-import time
-
-# @pytest.mark.parametrize('link', ["http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/?promo=offer0",
-#                                   "http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/?promo=offer1",
-#                                   "http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/?promo=offer2",
-#                                   "http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/?promo=offer3",
-#                                   "http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/?promo=offer4",
-#                                   "http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/?promo=offer5",
-#                                   "http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/?promo=offer6",
-#                                   pytest.param("http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/?promo=offer7", marks=pytest.mark.xfail),
-#                                   "http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/?promo=offer8",
-#                                   "http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/?promo=offer9"])
-# def test_guest_can_add_product_to_basket(browser, link):
-#     # link = "http://selenium1py.pythonanywhere.com/en-gb/catalogue/the-shellcoders-handbook_209/?promo=newYear"
-#     # link = "http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/?promo=newYear2019"
-#     page = ProductPage(browser, link)
-#     page.open()
-#     page.add_product_to_basket()
-#     page.solve_quiz_and_get_code()
-#     book_name = page.get_book_name()
-#     book_price = page.get_book_price()
-#     page.compare_books_name_in_basket_and_in_cataloge(book_name)
-#     page.compare_price_in_basket_and_in_cataloge(book_price)
-#     time.sleep(2)
+from faker import Faker
 
 
-@pytest.mark.skip
+@pytest.mark.login_user
+class TestUserAddToBasketFromProductPage:
+    @pytest.fixture(scope="function", autouse=True)
+    def setup(self, browser):
+        link = 'http://selenium1py.pythonanywhere.com/accounts/login/'
+        self.page = LoginPage(browser, link)
+        self.page.open()
+        f = Faker()
+        self.page.register_new_user(f.email(), f.password())
+        self.page.should_be_authorized_user()
+
+    def test_user_cant_see_success_message(self, browser):
+        link = 'http://selenium1py.pythonanywhere.com/catalogue/' \
+               'coders-at-work_207/'
+        page = ProductPage(browser, link)
+        page.open()
+        page.should_not_be_success_message()
+
+    @pytest.mark.need_review
+    def test_user_can_add_product_to_basket(self, browser):
+        link = 'http://selenium1py.pythonanywhere.com/catalogue/' \
+               'coders-at-work_207/?promo=offer0'
+        page = ProductPage(browser, link)
+        page.open()
+        page.should_be_product_page()
+        page.add_product_to_basket()
+        page.solve_quiz_and_get_code()
+        page.should_be_correct_success_messages()
+
+
+@pytest.mark.need_review
+@pytest.mark.parametrize('promo', [pytest.param(
+    i, marks=pytest.mark.xfail(i == 7, reason='fix this bug soon')
+) for i in range(10)])
+def test_guest_can_add_product_to_basket(browser, promo):
+    link = f'http://selenium1py.pythonanywhere.com/catalogue/' \
+        f'coders-at-work_207/?promo=offer{promo}'
+    page = ProductPage(browser, link)
+    page.open()
+    page.should_be_product_page()
+    page.add_product_to_basket()
+    page.solve_quiz_and_get_code()
+    page.should_be_correct_success_messages()
+
+
+@pytest.mark.xfail(reason="Negative verification of a successful message")
 def test_guest_cant_see_success_message_after_adding_product_to_basket(browser):
-    link = "http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/?promo=newYear2019"
+    link = 'http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/'
     page = ProductPage(browser, link)
     page.open()
     page.add_product_to_basket()
-    page.solve_quiz_and_get_code()
     page.should_not_be_success_message()
 
 
 def test_guest_cant_see_success_message(browser):
-    link = "http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/?promo=newYear2019"
+    link = 'http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/'
     page = ProductPage(browser, link)
     page.open()
     page.should_not_be_success_message()
 
 
-@pytest.mark.skip
+@pytest.mark.xfail(reason="Successful message should not fade(Negative check)")
 def test_message_disappeared_after_adding_product_to_basket(browser):
-    link = "http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/?promo=newYear2019"
+    link = 'http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/'
     page = ProductPage(browser, link)
     page.open()
     page.add_product_to_basket()
-    page.solve_quiz_and_get_code()
-    page.success_message_sould_dissapeared()
+    page.should_success_message_disappear()
 
 
-def test_guest_should_see_link_on_product_page(browser):
-    link = "http://selenium1py.pythonanywhere.com/en-gb/catalogue/the-city-and-the-stars_95/"
+def test_guest_should_see_login_link_on_product_page(browser):
+    link = "http://selenium1py.pythonanywhere.com/catalogue/" \
+           "the-city-and-the-stars_95/"
     page = ProductPage(browser, link)
     page.open()
     page.should_be_login_link()
 
 
+@pytest.mark.need_review
 def test_guest_can_go_to_login_page_from_product_page(browser):
-    link = "http://selenium1py.pythonanywhere.com/en-gb/catalogue/the-city-and-the-stars_95/"
+    link = "http://selenium1py.pythonanywhere.com/catalogue/" \
+           "the-city-and-the-stars_95/"
     page = ProductPage(browser, link)
     page.open()
     page.go_to_login_page()
+    page = LoginPage(browser, browser.current_url)
+    page.should_be_login_page()
 
 
+@pytest.mark.need_review
 def test_guest_cant_see_product_in_basket_opened_from_product_page(browser):
-    link = "http://selenium1py.pythonanywhere.com/en-gb/catalogue/the-city-and-the-stars_95/"
+    link = 'http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/'
     page = ProductPage(browser, link)
     page.open()
+    page.should_be_product_page()
     page.go_to_basket_page()
-    basket_page = BasketPage(browser, browser.current_url)
-    basket_page.should_be_empty_baskets_mwssage()
-    basket_page.should_not_be_items_in_basket()
+    page = BasketPage(browser, browser.current_url)
+    page.should_not_be_products_in_basket()
+    page.should_be_text_about_empty_basket()
+    page.should_be_correct_text_message_about_empty_basket()
